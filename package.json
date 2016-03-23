@@ -7,6 +7,7 @@
   },
   "devDependencies": {
     "gmail-send": "1.2.2",
-    "libnmap": "0.2.21"
+    "libnmap": "0.2.21",
+    "request": "2.69.0"
   }
 }

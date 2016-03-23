@@ -5,28 +5,58 @@ var send = require('gmail-send')({
     pass: config.notifications.gmail.password,
     to:   config.notifications.gmail.to
 });
-
+var request = require('request');
 
 var doScan = (function(configuration) {
     var hosts = configuration.checks.hosts;
 
+    /**
+     * Report on unexpected state
+     * @param offlineServices array of offline services
+     * @param hostName name of host with offline services
+     */
     function reportOfflineServices(offlineServices, hostName) {
-        var subject = '[Health] Services arr\u00eat\u00e9s sur ' + hostName;
-        var content;
-        if (offlineServices.length === 1) {
-            content = "Le service '" + offlineServices[0].name + "' sur le port " + offlineServices[0].port + " est arr&ecirc;t&eacute;"
-        } else {
-            content = "Les services suivants sont arr&ecirc;t&eacute;s :<br/><ul>";
-            offlineServices.forEach(function (offlineService) {
-                content += "<li>" + offlineService.name + " sur le port " + offlineService.port + "</li>"
+        reportByMail(offlineServices, hostName);
+        reportByHttp(offlineServices, hostName);
+    }
+
+    function reportByHttp(offlineServices, hostName) {
+        if (config.notifications.http && config.notifications.http.url) {
+            var content = '[Health] Services arr\u00eat\u00e9s sur ' + hostName;
+            if (offlineServices.length === 1) {
+                content = ": Le service '" + offlineServices[0].name + "' sur le port " + offlineServices[0].port;
+            } else {
+                content = ": Les services ";
+                offlineServices.forEach(function (offlineService, index) {
+                    content += offlineService.name + " sur le port " + offlineService.port + (index < offlineServices.length - 1 ? "," : ":")
+                });
+            }
+            var reportURL = config.notifications.http.url.replace(/\{content\}/, content);
+            request(reportURL, function (error, response, body) {
+                console.log(body);
             });
         }
-        send({
-            subject: subject,
-            html: content
-        }, function (err, res) {
-            console.log('send(): err:', err, '; res:', res);
-        });
+    }
+
+    function reportByMail(offlineServices, hostName) {
+        if (config.notifications.gmail) {
+            var subject = '[Health] Services arr\u00eat\u00e9s sur ' + hostName;
+            var content;
+            if (offlineServices.length === 1) {
+                content = "Le service '" + offlineServices[0].name + "' sur le port " + offlineServices[0].port + " est arr&ecirc;t&eacute;"
+            } else {
+                content = "Les services suivants sont arr&ecirc;t&eacute;s :<br/><ul>";
+                offlineServices.forEach(function (offlineService) {
+                    content += "<li>" + offlineService.name + " sur le port " + offlineService.port + "</li>"
+                });
+            }
+            send({
+                subject: subject,
+                html: content
+            }, function (err, res) {
+                console.log('send(): err:', err, '; res:', res);
+            });
+        }
     }
 
     function checkAllServicesForHost(host) {
