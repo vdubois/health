@@ -20,12 +20,26 @@ var doScan = (function(configuration) {
         reportByHttp(offlineServices, hostName);
     }
 
+    /**
+     * Report on unexpected state
+     * @param offlineServices array of offline services
+     * @param hostName name of host with offline services
+     */
+    function reportOfflineHost(hostName) {
+        reportByMail([], hostName);
+        reportByHttp([], hostName);
+    }
+
     function reportByHttp(offlineServices, hostName) {
         if (config.notifications.http && config.notifications.http.url) {
-            var content = '[Health] Services arr\u00eat\u00e9s sur ' + hostName;
+            if (offlineServices.length === 1) {
+                var content = '[Health] Services arr\u00eat\u00e9s sur ' + hostName;
+            } else {
+                var content = '[Health] Serveur ' + hostName + ' arr\u00eat\u00e9';
+            }
             if (offlineServices.length === 1) {
                 content = ": Le service '" + offlineServices[0].name + "' sur le port " + offlineServices[0].port;
-            } else {
+            } else if (offlineServices.length > 1) {
                 content = ": Les services ";
                 offlineServices.forEach(function (offlineService, index) {
                     content += offlineService.name + " sur le port " + offlineService.port + (index < offlineServices.length - 1 ? "," : ":")
@@ -40,11 +54,15 @@ var doScan = (function(configuration) {
 
     function reportByMail(offlineServices, hostName) {
         if (config.notifications.gmail) {
-            var subject = '[Health] Services arr\u00eat\u00e9s sur ' + hostName;
+            if (offlineServices.length === 1) {
+                var subject = '[Health] Services arr\u00eat\u00e9s sur ' + hostName;
+            } else {
+                var subject = '[Health] Serveur ' + hostName + ' arr\u00eat\u00e9';
+            }
             var content;
             if (offlineServices.length === 1) {
                 content = "Le service '" + offlineServices[0].name + "' sur le port " + offlineServices[0].port + " est arr&ecirc;t&eacute;"
-            } else {
+            } else if (offlineServices.length > 1) {
                 content = "Les services suivants sont arr&ecirc;t&eacute;s :<br/><ul>";
                 offlineServices.forEach(function (offlineService) {
                     content += "<li>" + offlineService.name + " sur le port " + offlineService.port + "</li>"
@@ -69,26 +87,28 @@ var doScan = (function(configuration) {
         };
         var foundServices = [];
         nmap.scan(options, function(err, report) {
-            if (err) throw new Error(err);
-
-            for (var item in report) {
-                if (report.hasOwnProperty(item)) {
-                    var services = report[item].host[0].ports[0].port;
-                    services.forEach(function (service) {
-                        foundServices.push(service.item.portid);
-                    });
-                }
-            }
-            var offlineServices = host.services.filter(function (service) {
-                for (var i = 0; i < foundServices.length; i++) {
-                    if (service.port === foundServices[i]) {
-                        return false;
+            if (err) {
+                reportOfflineHost(host.address);
+            } else {
+                for (var item in report) {
+                    if (report.hasOwnProperty(item)) {
+                        var services = report[item].host[0].ports[0].port;
+                        services.forEach(function (service) {
+                            foundServices.push(service.item.portid);
+                        });
                     }
                 }
-                return true;
-            });
-            if (offlineServices.length > 0) {
-                reportOfflineServices(offlineServices, host.address);
+                var offlineServices = host.services.filter(function (service) {
+                    for (var i = 0; i < foundServices.length; i++) {
+                        if (service.port === foundServices[i]) {
+                            return false;
+                        }
+                    }
+                    return true;
+                });
+                if (offlineServices.length > 0) {
+                    reportOfflineServices(offlineServices, host.address);
+                }
             }
         });
     }
