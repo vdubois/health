@@ -33,9 +33,9 @@ var doScan = (function(configuration) {
     function reportByHttp(offlineServices, hostName) {
         if (config.notifications.http && config.notifications.http.url) {
             if (offlineServices.length === 1) {
-                var content = '[Health] Services arr\u00eat\u00e9s sur ' + hostName;
+                var content = '[Health] Services arretes sur ' + hostName;
             } else {
-                var content = '[Health] Serveur ' + hostName + ' arr\u00eat\u00e9';
+                var content = '[Health] Serveur ' + hostName + ' arrete';
             }
             if (offlineServices.length === 1) {
                 content = ": Le service '" + offlineServices[0].name + "' sur le port " + offlineServices[0].port;
