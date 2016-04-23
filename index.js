@@ -32,15 +32,15 @@ var doScan = (function(configuration) {
 
     function reportByHttp(offlineServices, hostName) {
         if (config.notifications.http && config.notifications.http.url) {
-            if (offlineServices.length === 1) {
+            if (offlineServices.length >= 1) {
                 var content = '[Health] Services arretes sur ' + hostName;
             } else {
                 var content = '[Health] Serveur ' + hostName + ' arrete';
             }
             if (offlineServices.length === 1) {
-                content = ": Le service '" + offlineServices[0].name + "' sur le port " + offlineServices[0].port;
+                content += " : Le service '" + offlineServices[0].name + "' sur le port " + offlineServices[0].port;
             } else if (offlineServices.length > 1) {
-                content = ": Les services ";
+                content += " : Les services ";
                 offlineServices.forEach(function (offlineService, index) {
                     content += offlineService.name + " sur le port " + offlineService.port + (index < offlineServices.length - 1 ? "," : ":")
                 });
@@ -54,7 +54,7 @@ var doScan = (function(configuration) {
 
     function reportByMail(offlineServices, hostName) {
         if (config.notifications.gmail) {
-            if (offlineServices.length === 1) {
+            if (offlineServices.length >= 1) {
                 var subject = '[Health] Services arr\u00eat\u00e9s sur ' + hostName;
             } else {
                 var subject = '[Health] Serveur ' + hostName + ' arr\u00eat\u00e9';
