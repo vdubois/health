@@ -8,6 +8,7 @@
   "devDependencies": {
     "gmail-send": "1.2.2",
     "libnmap": "0.2.21",
-    "request": "2.69.0"
+    "request": "2.72.0",
+    "bluebird": "3.4.0"
   }
 }
