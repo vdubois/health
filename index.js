@@ -135,15 +135,17 @@ var doScan = (function(configuration) {
     function checkAllEndpointsForHost(host) {
         var foundEndpoints = [];
 
-        host.endpoints.forEach(function (endpoint) {
-            request.getS(endpoint.url, function (error, response, body) {
-                if (!error && response.statusCode == 200 && JSON.parse(body)[endpoint.contains]) {
-                } else {
-                    foundEndpoints.push(endpoint);
-                    reportOfflineEndpoints(foundEndpoints, host.address);
-                }
+        if (host.endpoints) {
+            host.endpoints.forEach(function (endpoint) {
+                request.getS(endpoint.url, function (error, response, body) {
+                    if (!error && response.statusCode == 200 && JSON.parse(body)[endpoint.contains]) {
+                    } else {
+                        foundEndpoints.push(endpoint);
+                        reportOfflineEndpoints(foundEndpoints, host.address);
+                    }
+                });
             });
-        });
+        }
     }
 
     return function () {
