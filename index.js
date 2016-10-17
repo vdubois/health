@@ -137,7 +137,7 @@ var doScan = (function(configuration) {
 
         if (host.endpoints) {
             host.endpoints.forEach(function (endpoint) {
-                request.getS(endpoint.url, function (error, response, body) {
+                request.get(endpoint.url, function (error, response, body) {
                     if (!error && response.statusCode == 200 && JSON.parse(body)[endpoint.contains]) {
                     } else {
                         foundEndpoints.push(endpoint);
